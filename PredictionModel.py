@@ -154,6 +154,10 @@ if crypto_options:
 
                                 combined_dates = pd.Index(list(coinprices.index) + list(future_dates))
 
+                                # Debugging statements
+                                st.write(f"Combined Dates: {combined_dates}")
+                                st.write(f"Combined Prices: {combined_prices}")
+
                                 # Plot using Plotly Express
                                 fig = px.line(
                                     x=combined_dates,
