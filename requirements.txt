@@ -3,3 +3,4 @@ plotly
 Historic_Crypto
 sklearn
 xgboost
+pip
