@@ -49,8 +49,6 @@ def get_data(cryptos, currency):
     
     return coinprices, None
 
-
-
 def prepare_data(data, time_step=60):
     scaler = MinMaxScaler(feature_range=(0, 1))
     scaled_data = scaler.fit_transform(data)
@@ -94,9 +92,9 @@ def historical_data():
 
     coinprices, error = get_data(cryptos, currency)
     if error:
-        return jsonify({'error': error})
+        return jsonify({'error': error}), 500  # Return error response with appropriate status code
 
-    return coinprices.to_json()
+    return coinprices.to_json(date_format='iso', orient='index')  # Ensure coinprices is converted to JSON format
 
 @app.route('/predict', methods=['POST'])
 def predict():
@@ -107,7 +105,7 @@ def predict():
 
     coinprices, error = get_data(cryptos, currency)
     if error:
-        return jsonify({'error': error})
+        return jsonify({'error': error}), 500  # Return error response with appropriate status code
 
     selected_column = f'{cryptos}-{currency}'
     data = coinprices[selected_column].values.reshape(-1, 1)
