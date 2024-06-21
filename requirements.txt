@@ -1,6 +1,5 @@
 streamlit
 plotly
 Historic_Crypto
-sklearn
+scikit-learn
 xgboost
-pip
