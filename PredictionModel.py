@@ -56,17 +56,22 @@ def prepare_data(data, time_step=60):
         return None, None, None
 
 # Function to make future predictions
-def predict_future(model, data, scaler, time_step=60, steps=180):  # Predict for 6 months (180 days)
+def predict_future(model, data, scaler, time_step=60, steps=180):
     try:
         data = scaler.transform(data)
-        future_inputs = data[-time_step:]
+        future_inputs = data[-time_step:].reshape(1, time_step)  # Reshape for XGBRegressor input
+        
         predictions = []
         for _ in range(steps):
-            pred = model.predict(np.reshape(future_inputs, (1, time_step)))
-            future_inputs = np.append(future_inputs[1:], pred)
+            pred = model.predict(future_inputs)
             predictions.append(pred[0])
-        predictions = scaler.inverse_transform(np.array(predictions).reshape(-1, 1))
-        return predictions
+            future_inputs = np.roll(future_inputs, -1)  # Shift array left
+            future_inputs[0, -1] = pred[0]  # Assign prediction to the last element
+        
+        predictions = np.array(predictions).reshape(-1, 1)
+        predictions = scaler.inverse_transform(predictions)  # Inverse transform predictions
+        
+        return predictions.flatten()  # Return flattened predictions array
     except Exception as e:
         st.error(f"Error predicting future prices: {e}")
         return None
@@ -137,30 +142,23 @@ if crypto_options:
                                 model.fit(X, y)
 
                             # Make future predictions
-                            future_predictions = predict_future(model, data, scaler)
+                            future_predictions = predict_future(model, data[-60:], scaler)
 
                             if future_predictions is not None:
                                 # Concatenate dates and prices for plot
                                 future_dates = pd.date_range(start=coinprices.index[-1], periods=len(future_predictions)+1, freq='D')[1:]
                                 historical_prices = coinprices[selected_column].values.flatten()
-                                combined_prices = np.concatenate((historical_prices, future_predictions.flatten()))
-                                
-                                # Convert index objects to lists and concatenate
-                                combined_dates = list(coinprices.index) + list(future_dates)
-                                
-                                # Create DataFrame with combined prices and dates
-                                combined_data = pd.DataFrame({'Date': combined_dates, 'Price': combined_prices})
-                                combined_data['Date'] = pd.to_datetime(combined_data['Date'])  # Ensure 'Date' column is datetime
-                                
+                                combined_prices = np.concatenate((historical_prices, future_predictions))
+
+                                combined_dates = pd.Index(list(coinprices.index) + list(future_dates))
+
                                 # Plot using Plotly Express
                                 fig = px.line(
-                                    combined_data,
-                                    x='Date',
-                                    y='Price',
+                                    x=combined_dates,
+                                    y=combined_prices,
                                     labels={"x": "Date", "y": "Price"},
                                     title=f'{cryptos}-{currency} Price Prediction'
                                 )
-                                
                                 # Update layout for dark theme
                                 fig.update_layout(
                                     template='plotly_dark',
@@ -179,8 +177,7 @@ if crypto_options:
                                     font=dict(color='white')
                                 )
                                 st.plotly_chart(fig)
-
                         except Exception as e:
-                            st.error(f"Error during model training: {e}")
+                            st.error(f"Error during model training or prediction: {e}")
             else:
                 st.error(f"No data found for {cryptos}-{currency}")
