@@ -28,18 +28,27 @@ def get_data(cryptos, currency):
     coinprices = pd.DataFrame()
     start_date = date(2020, 1, 1)
     end_date = date.today()
-    delta = timedelta(days=1000)
+    delta = timedelta(days=100)
 
     while start_date < end_date:
-        tmp = HistoricalData(pair, 60*60*24, start_date.strftime('%Y-%m-%d-00-00'), (start_date + delta).strftime('%Y-%m-%d-00-00'), verbose=False).retrieve_data()
-        if tmp.empty:
-            break
-        coinprices = pd.concat([coinprices, tmp[['close']]], axis=0)  # Concatenate along rows (axis=0)
+        try:
+            tmp = HistoricalData(pair, 60*60*24, start_date.strftime('%Y-%m-%d-00-00'), (start_date + delta).strftime('%Y-%m-%d-00-00'), verbose=False).retrieve_data()
+            if tmp.empty:
+                break
+            coinprices = pd.concat([coinprices, tmp[['close']]], axis=0)  # Concatenate along rows (axis=0)
+        except Exception as e:
+            return None, f"Error fetching data for {pair} between {start_date} and {start_date + delta}: {str(e)}"
+
         start_date += delta
+
+    if coinprices.empty:
+        return None, f"No data available for {pair} from {date(2020, 1, 1)} to {date.today()}"
 
     coinprices.index = pd.to_datetime(coinprices.index)
     coinprices = coinprices.ffill()
+    
     return coinprices, None
+
 
 
 def prepare_data(data, time_step=60):
