@@ -145,15 +145,22 @@ if crypto_options:
                                 historical_prices = coinprices[selected_column].values.flatten()
                                 combined_prices = np.concatenate((historical_prices, future_predictions.flatten()))
                                 
-                                # Concatenate index objects
-                                combined_dates = pd.concat([coinprices.index, future_dates])
-
+                                # Convert index objects to lists and concatenate
+                                combined_dates = list(coinprices.index) + list(future_dates)
+                                
+                                # Create DataFrame with combined prices and dates
+                                combined_data = pd.DataFrame({'Date': combined_dates, 'Price': combined_prices})
+                                combined_data['Date'] = pd.to_datetime(combined_data['Date'])  # Ensure 'Date' column is datetime
+                                
+                                # Plot using Plotly Express
                                 fig = px.line(
-                                    x=combined_dates,
-                                    y=combined_prices,
+                                    combined_data,
+                                    x='Date',
+                                    y='Price',
                                     labels={"x": "Date", "y": "Price"},
                                     title=f'{cryptos}-{currency} Price Prediction'
                                 )
+                                
                                 # Update layout for dark theme
                                 fig.update_layout(
                                     template='plotly_dark',
@@ -172,6 +179,7 @@ if crypto_options:
                                     font=dict(color='white')
                                 )
                                 st.plotly_chart(fig)
+
                         except Exception as e:
                             st.error(f"Error during model training: {e}")
             else:
