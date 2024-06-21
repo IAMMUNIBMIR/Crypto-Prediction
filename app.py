@@ -1,6 +1,5 @@
 from flask import Flask, request, jsonify
 from flask_cors import CORS
-from flask_sslify import SSLify
 from Historic_Crypto import HistoricalData, Cryptocurrencies
 import pandas as pd
 import numpy as np
@@ -10,7 +9,6 @@ from datetime import date, timedelta
 
 app = Flask(__name__)
 CORS(app)
-sslify = SSLify(app)
 
 @app.route('/')
 def home():
