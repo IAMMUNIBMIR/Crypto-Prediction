@@ -80,7 +80,6 @@ if crypto_options:
     mode = st.selectbox('Select Mode', ['Historical Data', 'Future Predictions'])
 
     st.header("Available Cryptocurrencies")
-    st.write(", ".join(crypto_options))
 
     # User selects cryptocurrency and currency
     cryptos = st.selectbox('Select Coin', crypto_options)
