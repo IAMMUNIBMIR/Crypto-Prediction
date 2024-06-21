@@ -31,7 +31,7 @@ def get_data(cryptos, currency):
         # Check if pair exists
         all_cryptos_df = Cryptocurrencies().find_crypto_pairs()
         if pair not in all_cryptos_df['id'].values:
-            st.error(f"{pair} not found in available cryptocurrency pairs.")
+            st.error(f"{pair} not found in available cryptocurrency pairs. Please choose a different pair.")
             return pd.DataFrame()
         
         TodaysDate = date.today()
@@ -85,15 +85,16 @@ def predict_future(model, data, scaler, time_step=60, steps=180):  # Predict for
 crypto_options = get_available_currencies()
 
 if crypto_options:
+
+    # User selects mode: Historical Data or Future Predictions
+    mode = st.selectbox('Select Mode', ['Historical Data', 'Future Predictions'])
+
     st.header("Available Cryptocurrencies")
     st.write(", ".join(crypto_options))
 
     # User selects cryptocurrency and currency
     cryptos = st.selectbox('Select Coin', crypto_options)
     currency = st.selectbox('Select Currency', ['EUR', 'USD', 'USDT', 'GBP', 'JPY', 'KRW'])
-
-    # User selects mode: Historical Data or Future Predictions
-    mode = st.selectbox('Select Mode', ['Historical Data', 'Future Predictions'])
 
     # Main process for each selected cryptocurrency
     if cryptos and currency and st.button('Show Predictions'):
