@@ -140,11 +140,13 @@ if crypto_options:
                             future_predictions = predict_future(model, data, scaler)
 
                             if future_predictions is not None:
-                                # Plot historical and future predictions using Plotly Express
+                                # Concatenate dates and prices for plot
                                 future_dates = pd.date_range(start=coinprices.index[-1], periods=len(future_predictions)+1, freq='D')[1:]
                                 historical_prices = coinprices[selected_column].values.flatten()
                                 combined_prices = np.concatenate((historical_prices, future_predictions.flatten()))
-                                combined_dates = pd.Index(coinprices.index).append(future_dates)
+                                
+                                # Concatenate index objects
+                                combined_dates = pd.concat([coinprices.index, future_dates])
 
                                 fig = px.line(
                                     x=combined_dates,
