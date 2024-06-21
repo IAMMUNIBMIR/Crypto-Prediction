@@ -5,7 +5,7 @@ import pandas as pd
 import numpy as np
 from sklearn.preprocessing import MinMaxScaler
 from xgboost import XGBRegressor
-from datetime import date
+from datetime import date, timedelta
 
 # Set up Streamlit for user inputs
 st.title('Cryptocurrency Price Prediction')
@@ -30,24 +30,24 @@ def get_data(cryptos, currency):
             st.error(f"{pair} not found in available cryptocurrency pairs. Please choose a different pair.")
             return pd.DataFrame()
 
-        TodaysDate = date.today()
-        st.write(f"Fetching data for {pair} from {TodaysDate}")
+        st.write(f"Fetching data for {pair}")
 
         # Initialize an empty DataFrame to accumulate data
         coinprices = pd.DataFrame()
 
         # Fetch historical data in chunks of 1000 rows to avoid large API responses
-        start_date = '2020-01-01'
-        chunk_size = 1000
-        end_date = TodaysDate.strftime('%Y-%m-%d')
+        start_date = date(2020, 1, 1)
+        end_date = date.today()
+        delta = timedelta(days=1000)
 
         while start_date < end_date:
-            tmp = HistoricalData(pair, 60*60*24, start_date + '-00-00', end_date + '-00-00', verbose=False).retrieve_data()
+            tmp = HistoricalData(pair, 60*60*24, start_date.strftime('%Y-%m-%d-00-00'), (start_date + delta).strftime('%Y-%m-%d-00-00'), verbose=False).retrieve_data()
             if tmp.empty:
                 break
             coinprices = pd.concat([coinprices, pd.DataFrame({pair: tmp['close']})])
-            start_date = (pd.to_datetime(tmp.index[-1]) + pd.DateOffset(days=1)).strftime('%Y-%m-%d')
+            start_date += delta
 
+        coinprices.index = pd.to_datetime(coinprices.index)
         coinprices = coinprices.ffill()  # Fill missing values
         st.write(f"Data fetched successfully for {pair}. Shape: {coinprices.shape}")
         return coinprices
@@ -168,10 +168,6 @@ if crypto_options:
                                 combined_prices = np.concatenate((historical_prices, future_predictions))
 
                                 combined_dates = pd.Index(list(coinprices.index) + list(future_dates))
-
-                                # Debugging statements
-                                st.write(f"Combined Dates: {combined_dates}")
-                                st.write(f"Combined Prices: {combined_prices}")
 
                                 # Plot using Plotly Express
                                 fig = px.line(
