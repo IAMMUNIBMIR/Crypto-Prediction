@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cryptocurrency Price Prediction</title>
+    <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            padding: 20px;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+        h1, h2, h3 {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        .dropdown {
+            margin-bottom: 10px;
+        }
+        .button {
+            display: block;
+            margin: 10px auto;
+            padding: 10px 20px;
+            background-color: #007BFF;
+            color: #fff;
+            border: none;
+            cursor: pointer;
+        }
+        .button:hover {
+            background-color: #0056b3;
+        }
+        .error {
+            color: red;
+            margin-bottom: 10px;
+        }
+        .plot {
+            margin-top: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Cryptocurrency Price Prediction</h1>
+        <div class="dropdown">
+            <label for="cryptos">Select Coin:</label>
+            <select id="cryptos">
+                <!-- Options will be dynamically populated by JavaScript -->
+            </select>
+        </div>
+        <div class="dropdown">
+            <label for="currency">Select Currency:</label>
+            <select id="currency">
+                <option value="EUR">EUR</option>
+                <option value="USD">USD</option>
+                <option value="USDT">USDT</option>
+                <option value="GBP">GBP</option>
+                <option value="JPY">JPY</option>
+                <option value="KRW">KRW</option>
+            </select>
+        </div>
+        <div class="dropdown">
+            <label for="mode">Select Mode:</label>
+            <select id="mode">
+                <option value="Historical Data">Historical Data</option>
+                <option value="Future Predictions">Future Predictions</option>
+            </select>
+        </div>
+        <button id="fetchData" class="button">Fetch Data</button>
+        <div id="error" class="error"></div>
+        <div id="plot" class="plot">
+            <!-- Plot will be dynamically populated by JavaScript -->
+        </div>
+    </div>
+
+    <script>
+        document.getElementById('fetchData').addEventListener('click', async () => {
+            const cryptos = document.getElementById('cryptos').value;
+            const currency = document.getElementById('currency').value;
+            const mode = document.getElementById('mode').value;
+
+            try {
+                const response = await fetch('/historical_data', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ cryptos, currency })
+                });
+
+                if (!response.ok) {
+                    throw new Error('Network response was not ok');
+                }
+
+                const data = await response.json();
+                const prices = JSON.parse(data);
+
+                // Plotly chart creation
+                const plotData = [{
+                    x: Object.keys(prices),
+                    y: Object.values(prices),
+                    type: 'scatter',
+                    mode: 'lines',
+                    marker: {color: 'blue'},
+                }];
+
+                const layout = {
+                    title: `${cryptos}-${currency} Historical Prices`,
+                    xaxis: {
+                        title: 'Date'
+                    },
+                    yaxis: {
+                        title: 'Price'
+                    }
+                };
+
+                Plotly.newPlot('plot', plotData, layout);
+
+            } catch (error) {
+                console.error('Error fetching data:', error);
+                document.getElementById('error').innerText = 'Error fetching data. Please try again.';
+                document.getElementById('plot').innerHTML = ''; // Clear plot on error
+            }
+        });
+
+        // Function to populate cryptocurrency dropdown
+        async function populateCryptos() {
+            try {
+                const response = await fetch('/available_currencies');
+                const data = await response.json();
+                const cryptosSelect = document.getElementById('cryptos');
+                
+                data.forEach(crypto => {
+                    const option = document.createElement('option');
+                    option.text = crypto;
+                    option.value = crypto;
+                    cryptosSelect.appendChild(option);
+                });
+            } catch (error) {
+                console.error('Error fetching cryptocurrencies:', error);
+            }
+        }
+
+        // Run populateCryptos on page load
+        populateCryptos();
+    </script>
+</body>
+</html>
