@@ -34,12 +34,13 @@ def get_data(cryptos, currency):
         tmp = HistoricalData(pair, 60*60*24, start_date.strftime('%Y-%m-%d-00-00'), (start_date + delta).strftime('%Y-%m-%d-00-00'), verbose=False).retrieve_data()
         if tmp.empty:
             break
-        coinprices = pd.concat([coinprices, tmp[['close']]], axis=1)  # Append 'close' column from tmp DataFrame
+        coinprices = pd.concat([coinprices, tmp[['close']]], axis=0)  # Concatenate along rows (axis=0)
         start_date += delta
 
     coinprices.index = pd.to_datetime(coinprices.index)
     coinprices = coinprices.ffill()
     return coinprices, None
+
 
 def prepare_data(data, time_step=60):
     scaler = MinMaxScaler(feature_range=(0, 1))
