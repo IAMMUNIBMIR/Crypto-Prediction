@@ -3,4 +3,4 @@ plotly
 Historic_Crypto
 scikit-learn
 xgboost
-pandas 1.4.0
+pandas==1.3.5
