@@ -31,9 +31,11 @@ def get_data(cryptos, currency):
             return pd.DataFrame()
         
         TodaysDate = date.today()
+        st.write(f"Fetching data for {pair} from {TodaysDate}")
         tmp = HistoricalData(pair, 60*60*24, '2020-01-01-00-00', f'{TodaysDate}-00-00', verbose=False).retrieve_data()
         coinprices = pd.DataFrame({pair: tmp['close']})  # Selecting 'close' price
         coinprices = coinprices.ffill()  # Fill missing values
+        st.write(f"Data fetched successfully for {pair}. Shape: {coinprices.shape}")
         return coinprices
     except Exception as e:
         st.error(f"Error fetching data: {e}")
