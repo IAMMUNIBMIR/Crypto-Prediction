@@ -90,11 +90,17 @@ def historical_data():
     cryptos = data.get('cryptos')
     currency = data.get('currency')
 
+    print(f"Request received for historical data: {cryptos}-{currency}")
+
     coinprices, error = get_data(cryptos, currency)
     if error:
-        return jsonify({'error': error}), 500  # Return error response with appropriate status code
+        print(f"Error fetching data: {error}")
+        return jsonify({'error': error})
 
-    return coinprices.to_json(date_format='iso', orient='index')  # Ensure coinprices is converted to JSON format
+    print("Successfully fetched historical data.")
+    print(coinprices.head())  # Print first few rows of the data for debugging
+
+    return coinprices.to_json(date_format='iso', orient='index')
 
 @app.route('/predict', methods=['POST'])
 def predict():
@@ -103,9 +109,15 @@ def predict():
     currency = data.get('currency')
     steps = data.get('steps', 180)
 
+    print(f"Request received for prediction: {cryptos}-{currency}, steps={steps}")
+
     coinprices, error = get_data(cryptos, currency)
     if error:
-        return jsonify({'error': error}), 500  # Return error response with appropriate status code
+        print(f"Error fetching data: {error}")
+        return jsonify({'error': error})
+
+    print("Successfully fetched data for prediction.")
+    print(coinprices.tail())  # Print last few rows of the data for debugging
 
     selected_column = f'{cryptos}-{currency}'
     data = coinprices[selected_column].values.reshape(-1, 1)
@@ -117,6 +129,9 @@ def predict():
     future_predictions = predict_future(model, data[-60:], scaler, steps=steps)
 
     future_dates = pd.date_range(start=coinprices.index[-1], periods=len(future_predictions)+1, freq='D')[1:]
+    print("Predictions:")
+    print(list(zip(future_dates.strftime('%Y-%m-%d').tolist(), future_predictions.tolist())))  # Print predictions for debugging
+
     return jsonify({
         'dates': future_dates.strftime('%Y-%m-%d').tolist(),
         'predictions': future_predictions.tolist()
