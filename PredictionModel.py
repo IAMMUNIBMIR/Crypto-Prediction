@@ -29,14 +29,29 @@ def get_data(cryptos, currency):
         if pair not in all_cryptos_df['id'].values:
             st.error(f"{pair} not found in available cryptocurrency pairs. Please choose a different pair.")
             return pd.DataFrame()
-        
+
         TodaysDate = date.today()
         st.write(f"Fetching data for {pair} from {TodaysDate}")
-        tmp = HistoricalData(pair, 60*60*24, '2020-01-01-00-00', f'{TodaysDate}-00-00', verbose=False).retrieve_data()
-        coinprices = pd.DataFrame({pair: tmp['close']})  # Selecting 'close' price
+
+        # Initialize an empty DataFrame to accumulate data
+        coinprices = pd.DataFrame()
+
+        # Fetch historical data in chunks of 1000 rows to avoid large API responses
+        start_date = '2020-01-01'
+        chunk_size = 1000
+        end_date = TodaysDate.strftime('%Y-%m-%d')
+
+        while start_date < end_date:
+            tmp = HistoricalData(pair, 60*60*24, start_date + '-00-00', end_date + '-00-00', verbose=False).retrieve_data()
+            if tmp.empty:
+                break
+            coinprices = pd.concat([coinprices, pd.DataFrame({pair: tmp['close']})])
+            start_date = (pd.to_datetime(tmp.index[-1]) + pd.DateOffset(days=1)).strftime('%Y-%m-%d')
+
         coinprices = coinprices.ffill()  # Fill missing values
         st.write(f"Data fetched successfully for {pair}. Shape: {coinprices.shape}")
         return coinprices
+
     except Exception as e:
         st.error(f"Error fetching data: {e}")
         return pd.DataFrame()
