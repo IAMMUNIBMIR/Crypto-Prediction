@@ -108,7 +108,10 @@ def historical_data():
     print("Successfully fetched historical data.")
     print(coinprices.head())  # Print first few rows of the data for debugging
 
-    return coinprices.to_json(date_format='iso', orient='index')
+    # Reset index to make it unique
+    coinprices.reset_index(inplace=True)
+
+    return coinprices.to_json(date_format='iso', orient='records')
 
 @app.route('/predict', methods=['POST'])
 def predict():
