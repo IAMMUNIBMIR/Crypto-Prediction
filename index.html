@@ -98,11 +98,10 @@
                 }
 
                 const data = await response.json();
-                const prices = JSON.parse(data);
 
                 const plotData = [{
-                    x: Object.keys(prices),
-                    y: Object.values(prices),
+                    x: Object.keys(data.prices),
+                    y: Object.values(data.prices),
                     type: 'scatter',
                     mode: 'lines',
                     marker: {color: 'blue'},
