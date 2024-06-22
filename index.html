@@ -99,6 +99,10 @@
 
                 const data = await response.json();
 
+                if (data.prices === undefined) {
+                    throw new Error('Prices data not found in response');
+                }
+
                 const plotData = [{
                     x: Object.keys(data.prices),
                     y: Object.values(data.prices),
