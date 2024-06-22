@@ -99,7 +99,7 @@
 
                 const data = await response.json();
 
-                if (data.prices === undefined) {
+                if (!data.hasOwnProperty('prices')) {
                     throw new Error('Prices data not found in response');
                 }
 
