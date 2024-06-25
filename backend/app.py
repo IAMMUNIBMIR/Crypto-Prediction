@@ -150,14 +150,17 @@ def predict():
     if error:
         return jsonify({'error': error}), 500
 
-    selected_column = f'{cryptos}-{currency}'
-    data = coinprices[selected_column].values.reshape(-1, 1)
-    X, y, scaler = prepare_data(data)
+    data = coinprices['close'].values.reshape(-1, 1)
+    X, y, scaler, error = prepare_data(data)
+    if error:
+        return jsonify({'error': error}), 500
 
     model = XGBRegressor(objective='reg:squarederror', n_estimators=100)
     model.fit(X, y)
 
-    future_predictions = predict_future(model, data[-60:], scaler, steps=steps)
+    future_predictions, error = predict_future(model, data[-60:], scaler, steps=steps)
+    if error:
+        return jsonify({'error': error}), 500
 
     future_dates = pd.date_range(start=coinprices.index[-1], periods=len(future_predictions)+1, freq='D')[1:]
     return jsonify({
